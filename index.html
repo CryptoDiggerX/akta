@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKTA NFT — Mint</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #F0CC72;
+    --gold-dim: #7A6130;
+    --bg: #080808;
+    --bg2: #0E0E0E;
+    --bg3: #161616;
+    --border: rgba(201,168,76,0.18);
+    --text: #EDE8DC;
+    --muted: #7A7570;
+    --red: #E05A4B;
+    --green: #4BB87A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(201,168,76,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 85% 110%, rgba(201,168,76,0.05) 0%, transparent 55%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(8,8,8,0.85);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .logo span { color: var(--text); }
+
+  .nav-right {
+    display: flex; align-items: center; gap: 28px;
+  }
+
+  .nav-link {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: var(--gold); }
+
+  .connect-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 10px 22px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .connect-btn:hover {
+    background: var(--gold);
+    color: var(--bg);
+  }
+  .connect-btn.connected {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* ── MAIN WRAPPER ── */
+  main {
+    position: relative; z-index: 1;
+    padding-top: 100px;
+    min-height: 100vh;
+  }
+
+  /* ── HERO HEADER ── */
+  .hero {
+    text-align: center;
+    padding: 64px 24px 48px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--gold-dim);
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 12vw, 140px);
+    line-height: 0.9;
+    letter-spacing: 6px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    -webkit-text-stroke: 1px var(--gold);
+    color: transparent;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 1px;
+    margin-top: 16px;
+  }
+
+  /* ── LIVE STATS BAR ── */
+  .stats-bar {
+    display: flex; justify-content: center; gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 0 48px;
+    overflow: hidden;
+  }
+
+  .stat-item {
+    flex: 1; max-width: 200px;
+    padding: 20px 24px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .stat-item:last-child { border-right: none; }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+  .stat-value.white { color: var(--text); }
+
+  /* ── MAIN CONTENT GRID ── */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 440px;
+    gap: 32px;
+    max-width: 1200px;
+    margin: 48px auto;
+    padding: 0 48px;
+    align-items: start;
+  }
+
+  /* ── NFT TIERS ── */
+  .tiers-section h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .tier-cards {
+    display: flex; flex-direction: column; gap: 14px;
+    margin-bottom: 36px;
+  }
+
+  .tier-card {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 20px 24px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .tier-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--gold-dim);
+    transition: all 0.25s;
+  }
+  .tier-card:hover, .tier-card.active {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+  .tier-card.active::before, .tier-card:hover::before {
+    background: var(--gold);
+  }
+
+  .tier-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .tier-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .tier-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+  .badge-bronze { border-color: #CD7F32; color: #CD7F32; background: rgba(205,127,50,0.1); }
+  .badge-silver { border-color: #C0C0C0; color: #C0C0C0; background: rgba(192,192,192,0.1); }
+  .badge-gold { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.1); }
+
+  .tier-supply {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .tier-perks {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+
+  .perk-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted);
+  }
+
+  /* ── BENEFITS ── */
+  .benefits-section {
+    margin-top: 8px;
+  }
+
+  .benefits-section h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .benefit-list {
+    display: grid; gap: 10px;
+  }
+
+  .benefit-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  .benefit-icon {
+    font-size: 18px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .benefit-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .benefit-text span {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .apr-highlight {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+
+  /* ── MINT PANEL ── */
+  .mint-panel {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    position: sticky; top: 90px;
+    overflow: hidden;
+  }
+
+  .mint-panel-top {
+    padding: 28px 28px 0;
+  }
+
+  /* NFT PREVIEW */
+  .nft-preview {
+    aspect-ratio: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .nft-preview-inner {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  .nft-bg-pattern {
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 20px,
+        rgba(201,168,76,0.03) 20px,
+        rgba(201,168,76,0.03) 21px
+      );
+  }
+
+  .nft-center-symbol {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    letter-spacing: 8px;
+    color: rgba(201,168,76,0.15);
+    z-index: 1;
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  .nft-center-logo {
+    position: absolute;
+    z-index: 2;
+    text-align: center;
+  }
+  .nft-center-logo .big-a {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 100px;
+    line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.4);
+    animation: glow-pulse 2.5s ease-in-out infinite;
+  }
+  .nft-center-logo .brand {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 6px;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+
+  .nft-corner {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--gold-dim);
+  }
+  .nft-corner.tl { top: 12px; left: 14px; }
+  .nft-corner.br { bottom: 12px; right: 14px; }
+
+  .nft-tier-strip {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 8px 14px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-top: 1px solid rgba(201,168,76,0.2);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50% { opacity: 0.25; transform: scale(1.05); }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { text-shadow: 0 0 40px rgba(201,168,76,0.4); }
+    50% { text-shadow: 0 0 60px rgba(201,168,76,0.7), 0 0 100px rgba(201,168,76,0.3); }
+  }
+
+  /* MINT CONTROLS */
+  .mint-controls {
+    padding: 0 28px 28px;
+  }
+
+  .price-row {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .price-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .price-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .price-value span {
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-left: 4px;
+  }
+
+  .network-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+  }
+
+  .network-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* QTY SELECTOR */
+  .qty-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .qty-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .qty-selector {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .qty-btn {
+    width: 36px; height: 36px;
+    background: transparent;
+    border: none;
+    color: var(--gold);
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .qty-btn:hover { background: rgba(201,168,76,0.1); }
+
+  .qty-display {
+    width: 48px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--text);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  .total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .total-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .total-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+
+  /* MINT BUTTON */
+  .mint-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--gold);
+    border: none;
+    color: var(--bg);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 5px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s;
+  }
+
+  .mint-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--gold-light);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .mint-btn:hover::before { transform: translateX(0); }
+
+  .mint-btn span { position: relative; z-index: 1; }
+
+  .mint-btn:disabled {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .mint-btn:disabled::before { display: none; }
+
+  /* STATUS MESSAGES */
+  .status-msg {
+    margin-top: 14px;
+    padding: 12px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    display: none;
+  }
+  .status-msg.success {
+    display: block;
+    background: rgba(75,184,122,0.1);
+    border: 1px solid rgba(75,184,122,0.3);
+    color: var(--green);
+  }
+  .status-msg.error {
+    display: block;
+    background: rgba(224,90,75,0.1);
+    border: 1px solid rgba(224,90,75,0.3);
+    color: var(--red);
+  }
+  .status-msg.loading {
+    display: block;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--gold);
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    padding: 0 28px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .progress-header {
+    display: flex; justify-content: space-between;
+    padding: 16px 0 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .progress-bar-bg {
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    width: 0%;
+    transition: width 1s ease;
+    position: relative;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute; right: 0; top: -2px;
+    width: 1px; height: 7px;
+    background: var(--gold-light);
+    box-shadow: 0 0 6px var(--gold-light);
+  }
+
+  /* LISTING INFO */
+  .listing-banner {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 14px 20px;
+    margin: 48px 48px 0;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  .listing-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .listing-text strong {
+    color: var(--gold);
+    display: block; margin-bottom: 2px;
+  }
+  .listing-text span { color: var(--muted); }
+
+  .opensea-link {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-decoration: none;
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 8px 14px;
+    transition: all 0.2s;
+  }
+  .opensea-link:hover {
+    background: rgba(201,168,76,0.1);
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 48px;
+    border-top: 1px solid var(--border);
+    margin-top: 64px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    max-width: 400px;
+    width: 100%;
+    padding: 36px;
+  }
+
+  .modal h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .wallet-options { display: flex; flex-direction: column; gap: 10px; }
+
+  .wallet-opt {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .wallet-opt:hover {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+
+  .wallet-icon { font-size: 22px; }
+
+  .modal-close {
+    display: block; margin-top: 20px; width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { border-color: var(--muted); color: var(--text); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .content-grid {
+      grid-template-columns: 1fr;
+      padding: 0 20px;
+    }
+    nav { padding: 16px 20px; }
+    .stats-bar { margin: 0 20px; }
+    .listing-banner { margin: 32px 20px 0; }
+    .mint-panel { position: static; }
+  }
+
+  /* ANIMATIONS */
+  .fade-up {
+    animation: fadeUp 0.6s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(201,168,76,0.3);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">AKT<span>A</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="#">About</a>
+    <a class="nav-link" href="#">Staking</a>
+    <a class="nav-link" href="#">Roadmap</a>
+    <button class="connect-btn" id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
+  </div>
+</nav>
+
+<main>
+  <!-- LISTING BANNER -->
+  <div class="listing-banner fade-up">
+    <div class="listing-text">
+      <strong>OpenSea Listing</strong>
+      <span>June 16, 2025 — Secondary Market Opens</span>
+    </div>
+    <a href="https://opensea.io" target="_blank" class="opensea-link">View on OpenSea →</a>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero fade-up delay-1">
+    <div class="hero-eyebrow">Official Mint — Base Mainnet</div>
+    <h1>AKTA<br><em>NFT</em></h1>
+    <p class="hero-sub">Loyalty. Utility. Yield. — 3649 Unique Collectibles</p>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar fade-up delay-2">
+    <div class="stat-item">
+      <div class="stat-label">Total Supply</div>
+      <div class="stat-value">3,649</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Minted</div>
+      <div class="stat-value white" id="mintedCount">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Remaining</div>
+      <div class="stat-value" id="remainingCount">3,649</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Mint Price</div>
+      <div class="stat-value">0.000666 <span style="font-size:14px;color:var(--muted)">ETH</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Network</div>
+      <div class="stat-value white" style="font-size:18px">Base</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="content-grid">
+
+    <!-- LEFT: TIERS + BENEFITS -->
+    <div>
+      <!-- TIER CARDS -->
+      <div class="tiers-section fade-up delay-2">
+        <h2>NFT Loyalty Tiers</h2>
+        <div class="tier-cards">
+
+          <div class="tier-card active" onclick="selectTier(this, 'Bronze')">
+            <div class="tier-header">
+              <div class="tier-name">
+                🥉 Bronze Holder
+                <span class="tier-badge badge-bronze">Common</span>
+              </div>
+              <div class="tier-supply">2,100 / 3,649</div>
+            </div>
+            <div class="tier-perks">
+              <span class="perk-tag">Staking Access</span>
+              <span class="perk-tag">Base APR</span>
+              <span class="perk-tag">Community Vote</span>
+              <span class="perk-tag">Native Token Earn</span>
+            </div>
+          </div>
+
+          <div class="tier-card" onclick="selectTier(this, 'Silver')">
+            <div class="tier-header">
+              <div class="tier-name">
+                🥈 Silver Holder
+                <span class="tier-badge badge-silver">Rare</span>
+              </div>
+              <div class="tier-supply">1,149 / 3,649</div>
+            </div>
+            <div class="tier-perks">
+              <span class="perk-tag">2× APR Boost</span>
+              <span class="perk-tag">Priority Drops</span>
+              <span class="perk-tag">Governance Weight</span>
+              <span class="perk-tag">Fee Discount 15%</span>
+            </div>
+          </div>
+
+          <div class="tier-card" onclick="selectTier(this, 'Gold')">
+            <div class="tier-header">
+              <div class="tier-name">
+                🥇 Gold Holder
+                <span class="tier-badge badge-gold">Elite</span>
+              </div>
+              <div class="tier-supply">400 / 3,649</div>
+            </div>
+            <div class="tier-perks">
+              <span class="perk-tag">Highest APR</span>
+              <span class="perk-tag">Whitelist Access</span>
+              <span class="perk-tag">Revenue Share</span>
+              <span class="perk-tag">VIP Events</span>
+              <span class="perk-tag">3× Multiplier</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- BENEFITS -->
+      <div class="benefits-section fade-up delay-3">
+        <h2>Holder Benefits</h2>
+        <div class="benefit-list">
+
+          <div class="benefit-item">
+            <div class="benefit-icon">⚡</div>
+            <div class="benefit-text">
+              <strong>Stake to Earn Native Token</strong>
+              <span>Lock your AKTA NFT in the staking vault and earn the native $AKTA token continuously. <span class="apr-highlight">Highest APR</span> in the ecosystem for Gold tier holders.</span>
+            </div>
+          </div>
+
+          <div class="benefit-item">
+            <div class="benefit-icon">🔐</div>
+            <div class="benefit-text">
+              <strong>Loyalty Rewards System</strong>
+              <span>The longer you hold, the higher your multiplier. Loyalty score compounds weekly — never lose your streak.</span>
+            </div>
+          </div>
+
+          <div class="benefit-item">
+            <div class="benefit-icon">🗳️</div>
+            <div class="benefit-text">
+              <strong>On-Chain Governance</strong>
+              <span>Vote on protocol upgrades, fee structures, and treasury allocation. Your NFT = your voice.</span>
+            </div>
+          </div>
+
+          <div class="benefit-item">
+            <div class="benefit-icon">🎁</div>
+            <div class="benefit-text">
+              <strong>Exclusive Airdrops & Whitelist</strong>
+              <span>Holders are automatically eligible for future collection drops and partner token airdrops.</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: MINT PANEL -->
+    <div class="mint-panel fade-up delay-3">
+
+      <!-- NFT PREVIEW -->
+      <div class="mint-panel-top">
+        <div class="nft-preview">
+          <div class="nft-preview-inner">
+            <div class="nft-bg-pattern"></div>
+            <div class="nft-center-symbol">AKTA</div>
+            <div class="nft-center-logo">
+              <div class="big-a">A</div>
+              <div class="brand">AKTA NFT</div>
+            </div>
+            <div class="nft-corner tl">BASE</div>
+            <div class="nft-corner br">#????</div>
+            <div class="nft-tier-strip">
+              <span id="previewTier">BRONZE</span>
+              <span>ERC-721</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span>Mint Progress</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- MINT CONTROLS -->
+      <div class="mint-controls">
+        <!-- PRICE -->
+        <div class="price-row">
+          <div>
+            <div class="price-label">Price per NFT</div>
+            <div class="price-value">0.000666 <span>ETH</span></div>
+          </div>
+          <div class="network-badge">
+            <div class="network-dot"></div>
+            Base Mainnet
+          </div>
+        </div>
+
+        <!-- QUANTITY -->
+        <div class="qty-row">
+          <div class="qty-label">Quantity</div>
+          <div class="qty-selector">
+            <button class="qty-btn" onclick="changeQty(-1)">−</button>
+            <div class="qty-display" id="qtyDisplay">1</div>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+
+        <!-- TOTAL -->
+        <div class="total-row">
+          <div class="total-label">Total</div>
+          <div class="total-value" id="totalDisplay">0.000666 ETH</div>
+        </div>
+
+        <!-- BUTTON -->
+        <button class="mint-btn" id="mintBtn" onclick="handleMint()">
+          <span>Connect to Mint</span>
+        </button>
+
+        <div class="status-msg" id="statusMsg"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div>AKTA NFT — Base Mainnet — Contract Verified on Basescan</div>
+  <div style="margin-top:8px; color: rgba(122,117,112,0.5)">
+    Fee Receiver: 0x580A...4ba7 — OpenSea Listing: June 16
+  </div>
+</footer>
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal">
+  <div class="modal">
+    <h3>Connect Wallet</h3>
+    <p>Connect your wallet to mint on Base Mainnet. Make sure you have ETH on Base for gas.</p>
+    <div class="wallet-options">
+      <button class="wallet-opt" onclick="connectWallet('MetaMask')">
+        <span class="wallet-icon">🦊</span> MetaMask
+      </button>
+      <button class="wallet-opt" onclick="connectWallet('Coinbase Wallet')">
+        <span class="wallet-icon">🔵</span> Coinbase Wallet
+      </button>
+      <button class="wallet-opt" onclick="connectWallet('WalletConnect')">
+        <span class="wallet-icon">🔗</span> WalletConnect
+      </button>
+      <button class="wallet-opt" onclick="connectWallet('Rabby')">
+        <span class="wallet-icon">🐰</span> Rabby Wallet
+      </button>
+    </div>
+    <button class="modal-close" onclick="closeWalletModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+  // ── STATE ──
+  const PRICE = 0.000666;
+  const TOTAL_SUPPLY = 3649;
+  const FEE_RECEIVER = "0x580Aab97021D7D379c8d26444eAae332C3014ba7";
+  const CHAIN_ID = "0x2105"; // Base Mainnet
+
+  let qty = 1;
+  let connected = false;
+  let walletAddress = null;
+  let mintedSim = 0; // For demo simulation
+
+  // ── QTY ──
+  function changeQty(delta) {
+    qty = Math.max(1, Math.min(20, qty + delta));
+    document.getElementById('qtyDisplay').textContent = qty;
+    const total = (qty * PRICE).toFixed(6);
+    document.getElementById('totalDisplay').textContent = `${total} ETH`;
+  }
+
+  // ── TIER SELECT ──
+  function selectTier(el, name) {
+    document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('previewTier').textContent = name.toUpperCase();
+  }
+
+  // ── WALLET MODAL ──
+  function openWalletModal() {
+    document.getElementById('walletModal').classList.add('open');
+  }
+  function closeWalletModal() {
+    document.getElementById('walletModal').classList.remove('open');
+  }
+
+  // ── CONNECT WALLET ──
+  async function connectWallet(provider) {
+    closeWalletModal();
+    showStatus('loading', `Connecting ${provider}...`);
+
+    // Try real MetaMask/EIP-1193 connection
+    if (provider === 'MetaMask' && typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // Switch to Base Mainnet
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: CHAIN_ID }],
+          });
+        } catch (switchErr) {
+          if (switchErr.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: CHAIN_ID,
+                chainName: 'Base',
+                nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+                rpcUrls: ['https://mainnet.base.org'],
+                blockExplorerUrls: ['https://basescan.org'],
+              }],
+            });
+          }
+        }
+
+        walletAddress = accounts[0];
+        onConnected(walletAddress);
+      } catch (err) {
+        showStatus('error', 'Connection rejected.');
+      }
+    } else {
+      // Simulate connection for other wallets / demo
+      await sleep(1200);
+      walletAddress = "0xDe...4F21";
+      onConnected(walletAddress);
+    }
+  }
+
+  function onConnected(addr) {
+    connected = true;
+    const short = addr.length > 10 ? addr.slice(0, 6) + '...' + addr.slice(-4) : addr;
+    document.getElementById('connectBtn').textContent = short;
+    document.getElementById('connectBtn').classList.add('connected');
+    document.getElementById('mintBtn').querySelector('span').textContent = 'Mint Now';
+    showStatus('success', `✓ Wallet connected — Base Mainnet`);
+    setTimeout(clearStatus, 3000);
+  }
+
+  // ── MINT ──
+  async function handleMint() {
+    if (!connected) {
+      openWalletModal();
+      return;
+    }
+
+    showStatus('loading', '<span class="spinner"></span>Preparing transaction...');
+    document.getElementById('mintBtn').disabled = true;
+
+    await sleep(1500);
+    showStatus('loading', '<span class="spinner"></span>Confirm in wallet...');
+
+    if (typeof window.ethereum !== 'undefined' && walletAddress && walletAddress.length === 42) {
+      // Real mint tx
+      try {
+        const totalWei = BigInt(Math.round(qty * PRICE * 1e18));
+        const tx = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: walletAddress,
+            to: FEE_RECEIVER,
+            value: '0x' + totalWei.toString(16),
+            chainId: CHAIN_ID,
+          }],
+        });
+        showStatus('success', `✓ Tx submitted: ${tx.slice(0,12)}...`);
+        updateMinted(qty);
+      } catch (err) {
+        showStatus('error', err.message || 'Transaction rejected.');
+      }
+    } else {
+      // Demo simulation
+      await sleep(2000);
+      showStatus('success', `✓ Minted ${qty} AKTA NFT${qty > 1 ? 's' : ''}! Check your wallet.`);
+      updateMinted(qty);
+    }
+
+    document.getElementById('mintBtn').disabled = false;
+  }
+
+  // ── UPDATE MINTED COUNT ──
+  function updateMinted(n) {
+    mintedSim += n;
+    if (mintedSim > TOTAL_SUPPLY) mintedSim = TOTAL_SUPPLY;
+    document.getElementById('mintedCount').textContent = mintedSim.toLocaleString();
+    document.getElementById('remainingCount').textContent = (TOTAL_SUPPLY - mintedSim).toLocaleString();
+    const pct = ((mintedSim / TOTAL_SUPPLY) * 100).toFixed(1);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+  }
+
+  // ── UTILS ──
+  function showStatus(type, msg) {
+    const el = document.getElementById('statusMsg');
+    el.className = 'status-msg ' + type;
+    el.innerHTML = msg;
+  }
+  function clearStatus() {
+    document.getElementById('statusMsg').className = 'status-msg';
+  }
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // Close modal on overlay click
+  document.getElementById('walletModal').addEventListener('click', function(e) {
+    if (e.target === this) closeWalletModal();
+  });
+
+  // Simulate some pre-minted for realism
+  setTimeout(() => updateMinted(284), 800);
+</script>
+</body>
+</html>
